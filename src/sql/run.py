@@ -76,9 +76,10 @@ class ResultSet(list, ColumnGuesserMixin):
     
     Can access rows listwise, or by string value of leftmost column.
     """
-    def __init__(self, sqlaproxy, sql, config):
+    def __init__(self, sqlaproxy, sql, conn, config):
         self.keys = sqlaproxy.keys()
         self.sql = sql
+        self.conn = conn
         self.config = config
         self.limit = config.autolimit
         style_name = config.style
@@ -236,7 +237,6 @@ class ResultSet(list, ColumnGuesserMixin):
             return CsvResultDescriptor(filename)
         else:
             return outfile.getvalue()
-        
     
 def interpret_rowcount(rowcount):
     if rowcount < 0:
@@ -253,7 +253,7 @@ def run(conn, sql, config, user_namespace):
             result = conn.session.execute(txt, user_namespace)
             if result and config.feedback:
                 print(interpret_rowcount(result.rowcount))
-        resultset = ResultSet(result, statement, config)
+        resultset = ResultSet(result, statement, conn, config)
         if config.autopandas:
             return resultset.DataFrame()
         else:
