@@ -85,15 +85,25 @@ class ResultSet(list, ColumnGuesserMixin):
         style_name = config.style
         self.style = prettytable.__dict__[style_name.upper()]
         if sqlaproxy.returns_rows:
+            # determine which columns have raw PostGIS data in them
+            #gisfilter = [i for i in range(len(self.field_names)) if self.field_names[i] in ('geom', 'the_geom')]
+            gisfilter = [i for i in range(len(sqlaproxy.cursor.description)) if sqlaproxy.cursor.description[i].type_code in (563391,)]
+            
             if self.limit:
                 list.__init__(self, sqlaproxy.fetchmany(size=self.limit))
             else:
                 list.__init__(self, sqlaproxy.fetchall())
             self.field_names = unduplicate_field_names(self.keys)
             self.pretty = prettytable.PrettyTable(self.field_names)
+            
+
             if not config.autopandas:
                 for row in self[:config.displaylimit or None]:
-                    self.pretty.add_row(row)
+                    prettyrow = [r for r in row]
+                    # remove PostGIS data for HTML view
+                    for i in gisfilter:
+                        prettyrow[i] = 'GIS data, {} bytes'.format(len(prettyrow[i]))
+                    self.pretty.add_row(prettyrow)
             self.pretty.set_style(self.style)
         else:
             list.__init__(self, [])

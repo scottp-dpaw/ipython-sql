@@ -14,7 +14,6 @@ class Connection(object):
             print(self.tell_format())
             raise 
         self.metadata = sqlalchemy.MetaData(bind=engine)
-        self.connect_str = connect_str
         self.name = self.assign_name(engine)
         self.session = engine.connect() 
         self.connections[self.name] = self
