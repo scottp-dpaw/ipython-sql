@@ -261,7 +261,7 @@ class ResultSet(list, ColumnGuesserMixin):
     
     def qgis(self, filename, geom_field=None):
         """Generate a QGIS project based on the SQL query, writing it to ``filename``. Optionally, define a column ```geom_field``` to use as a source of GIS data, otherwise fall back on the PostGIS defaults of 'geom' or 'the_geom'."""
-        outfile = open(filename, 'wb')
+        outfile = open(filename, 'w')
         outfile.write(qgis_generate(self, filename, geom_field))
         outfile.close()
         return QgisProjectDescriptor(filename)
