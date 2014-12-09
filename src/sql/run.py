@@ -10,6 +10,7 @@ import sqlparse
 import prettytable
 from .column_guesser import ColumnGuesserMixin
 
+from .qgis import qgis_generate
 
 def unduplicate_field_names(field_names):
     """Append a number to duplicate field names to make them unique. """
@@ -69,7 +70,17 @@ class CsvResultDescriptor(object):
         return 'CSV results at %s' % os.path.join(os.path.abspath('.'), self.file_path)
     def _repr_html_(self):
         return '<a href="%s">CSV results</a>' % os.path.join('.', 'files', self.file_path)
-    
+
+class QgisProjectDescriptor(object):
+    """Provides IPython Notebook-friendly output for the feedback after a ``.qgis`` called."""
+    def __init__(self, file_path):
+        self.file_path = file_path
+    def __repr__(self):
+        return 'QGIS project at %s' % os.path.join(os.path.abspath('.'), self.file_path)
+    def _repr_html_(self):
+        return '<a href="%s">QGIS project</a>' % os.path.join('.', 'files', self.file_path)
+
+
 class ResultSet(list, ColumnGuesserMixin):
     """
     Results of a SQL query.
@@ -248,6 +259,13 @@ class ResultSet(list, ColumnGuesserMixin):
         else:
             return outfile.getvalue()
     
+    def qgis(self, filename, geom_field=None):
+        """Generate a QGIS project based on the SQL query, writing it to ``filename``. Optionally, define a column ```geom_field``` to use as a source of GIS data, otherwise fall back on the PostGIS defaults of 'geom' or 'the_geom'."""
+        outfile = open(filename, 'wb')
+        outfile.write(qgis_generate(self, filename, geom_field))
+        outfile.close()
+        return QgisProjectDescriptor(filename)
+   
 def interpret_rowcount(rowcount):
     if rowcount < 0:
         result = 'Done.'
